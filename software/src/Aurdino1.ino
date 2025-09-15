@@ -72,3 +72,57 @@ void loop() {
         sendMsg("Typing: " + inputTime);
       }
     }
+else if (key == '#' && currentServo != -1 && !timeSet[currentServo]) {
+      if (inputTime.length() == 6) {
+        int hh = inputTime.substring(0,2).toInt();
+        int mm = inputTime.substring(2,4).toInt();
+        int ss = inputTime.substring(4,6).toInt();
+
+        setTime[currentServo] = ((unsigned long)hh * 3600UL +
+                                 (unsigned long)mm * 60UL +
+                                 (unsigned long)ss) * 1000UL;
+
+        startTime[currentServo] = millis();
+        timeSet[currentServo] = true;
+        servoRun[currentServo] = false;
+
+        sendMsg("SERVO " + String(currentServo+1) + " SET " +
+                String(hh)+"h "+String(mm)+"m "+String(ss)+"s");
+      } else {
+        sendMsg("ERROR: Need 6 digits");
+      }
+      currentServo = -1;
+    }
+  }
+
+  for (int i=0; i<NUM_SERVOS; i++) {
+    if (timeSet[i] && !servoRun[i] && (millis() - startTime[i] >= setTime[i])) {
+      digitalWrite(BUZZER_PIN, HIGH);
+      servos[i].write(90);
+      sendMsg("SERVO " + String(i+1) + " RUN");
+      delay(2000);
+      servos[i].write(0);
+      servoRun[i] = true;
+      digitalWrite(BUZZER_PIN, LOW);
+      sendMsg("SERVO " + String(i+1) + " DONE");
+    }
+  }
+}
+
+void resetSystem() {
+  inputTime = "";
+  currentServo = -1;
+  pulseMode = false;
+  for (int i=0; i<NUM_SERVOS; i++) {
+    timeSet[i] = false;
+    servoRun[i] = false;
+    servos[i].write(0);
+  }
+  sendMsg("RESET");
+  sendMsg("Select: 1-8 Servo, A Pulse");
+}
+
+void sendMsg(String msg) {
+  mySerial.println(msg);
+  Serial.println("-> UNO2: " + msg);
+}
