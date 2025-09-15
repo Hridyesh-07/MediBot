@@ -1,10 +1,13 @@
 #include <Keypad.h>
 #include <Servo.h>
 #include <SoftwareSerial.h>
+#include <PulseSensorPlayground.h>
 
 #define NUM_SERVOS 8
 #define BUZZER_PIN 2
+#define PULSE_PIN A0   // Pulse sensor pin
 
+// Servo setup
 Servo servos[NUM_SERVOS];
 int servoPins[NUM_SERVOS] = {3, 4, 5, 6, 7, 8, 9, 10};
 
@@ -22,7 +25,11 @@ byte colPins[COLS] = {A2, A3, A4, A5};
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 // Serial comm to UNO2
-SoftwareSerial mySerial(6, 7); // RX, TX (UNO1_TX=D7 → UNO2_RX)
+SoftwareSerial mySerial(6, 7); // RX, TX
+
+// Pulse sensor
+PulseSensorPlayground pulseSensor;
+int Threshold = 550; // Default threshold (adjust if needed)
 
 String inputTime = "";
 unsigned long setTime[NUM_SERVOS] = {0};
@@ -33,10 +40,13 @@ bool servoRun[NUM_SERVOS] = {false};
 int currentServo = -1;
 bool pulseMode = false;
 
+unsigned long lastPulseSend = 0;
+
 void setup() {
   Serial.begin(9600);
   mySerial.begin(9600);
 
+  // Attach servos
   for (int i=0; i<NUM_SERVOS; i++) {
     servos[i].attach(servoPins[i]);
     servos[i].write(0);
@@ -45,9 +55,17 @@ void setup() {
   pinMode(BUZZER_PIN, OUTPUT);
   digitalWrite(BUZZER_PIN, LOW);
 
+  // Pulse sensor setup
+  pulseSensor.analogInput(PULSE_PIN);
+  pulseSensor.setThreshold(Threshold);
+  if (pulseSensor.begin()) {
+    Serial.println("Pulse sensor ready.");
+  }
+
   sendMsg("RESET");
   sendMsg("Select: 1-8 Servo, A Pulse");
 }
+
 void loop() {
   char key = keypad.getKey();
 
@@ -64,6 +82,7 @@ void loop() {
     else if (key == 'A' && currentServo == -1 && !pulseMode) {
       pulseMode = true;
       sendMsg("PULSE MODE ON");
+      Serial.println("PULSE MODE ON");
     }
 
     else if (key >= '0' && key <= '9' && currentServo != -1 && !timeSet[currentServo]) {
@@ -72,7 +91,8 @@ void loop() {
         sendMsg("Typing: " + inputTime);
       }
     }
-else if (key == '#' && currentServo != -1 && !timeSet[currentServo]) {
+
+    else if (key == '#' && currentServo != -1 && !timeSet[currentServo]) {
       if (inputTime.length() == 6) {
         int hh = inputTime.substring(0,2).toInt();
         int mm = inputTime.substring(2,4).toInt();
@@ -95,17 +115,33 @@ else if (key == '#' && currentServo != -1 && !timeSet[currentServo]) {
     }
   }
 
+  // Servo execution
   for (int i=0; i<NUM_SERVOS; i++) {
     if (timeSet[i] && !servoRun[i] && (millis() - startTime[i] >= setTime[i])) {
       digitalWrite(BUZZER_PIN, HIGH);
       servos[i].write(90);
       sendMsg("SERVO " + String(i+1) + " RUN");
+      Serial.println("SERVO " + String(i+1) + " RUN");
       delay(2000);
       servos[i].write(0);
       servoRun[i] = true;
       digitalWrite(BUZZER_PIN, LOW);
       sendMsg("SERVO " + String(i+1) + " DONE");
+      Serial.println("SERVO " + String(i+1) + " DONE");
     }
+  }
+
+  // Pulse sensor BPM (every second)
+  if (pulseMode && millis() - lastPulseSend > 1000) {
+    int myBPM = pulseSensor.getBeatsPerMinute();
+
+    if (myBPM > 0) {   // Only send valid BPM
+      String msg = "Pulse BPM:" + String(myBPM);
+      sendMsg(msg);       // UNO2 LCD पर
+      Serial.println(msg); // UNO1 Serial Monitor पर
+    }
+
+    lastPulseSend = millis();
   }
 }
 
@@ -120,6 +156,7 @@ void resetSystem() {
   }
   sendMsg("RESET");
   sendMsg("Select: 1-8 Servo, A Pulse");
+  Serial.println("RESET done");
 }
 
 void sendMsg(String msg) {
