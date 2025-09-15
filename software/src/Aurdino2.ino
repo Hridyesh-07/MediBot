@@ -32,3 +32,24 @@ void loop() {
       serialData += c;
     }
   }
+
+if (millis() - lastPulse > 500) {
+    int pulseValue = analogRead(PULSE_PIN);
+    lcd.setCursor(0,1);
+    lcd.print("Pulse:");
+    lcd.print(pulseValue);
+    lcd.print("   ");
+    Serial.print("Pulse: ");
+    Serial.println(pulseValue);
+    lastPulse = millis();
+  }
+}
+
+void displayMsg(String msg) {
+  lcd.clear();
+  lcd.setCursor(0,0);
+  lcd.print(msg.substring(0,16));
+  lcd.setCursor(0,1);
+  if (msg.length() > 16) lcd.print(msg.substring(16));
+  Serial.println("LCD: " + msg);
+}
