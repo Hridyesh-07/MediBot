@@ -9,7 +9,7 @@ The second Arduino displays status messages and real-time pulse sensor data on a
 ## Project Overview
 
 - **Arduino 2 (Secondary Board):**  
-  Receives status messages from Arduino 2 and shows them on a 16x2 LCD. It continuously reads a pulse sensor on analog pin A0 and displays the pulse value.
+  Receives status messages from Arduino 1 and shows them on a 16x2 LCD. It continuously reads a pulse sensor on analog pin A0 and displays the pulse value.
 - **Arduino 1 (Primary Board):**  
  Controls 8 servos on pins 3-10, accepts user input from a 4x4 keypad, and activates a buzzer on reminders. It runs timers for each servo slot based on user input and communicates status messages over SoftwareSerial to the primary board.
 ---
