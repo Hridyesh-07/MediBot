@@ -37,6 +37,7 @@ The second Arduino displays status messages and real-time pulse sensor data on a
 ---
 
 ## Folder Structure
+```
 MediBot/
 │── hardware/          # Wiring diagrams, photos, parts list
 │── software/
@@ -44,4 +45,3 @@ MediBot/
 │   └── include/      # Optional header files or libraries
 │── docs/             # Documentation, user guides, screenshots
 │── README.md         # This project overview
-
