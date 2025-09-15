@@ -45,3 +45,45 @@ MediBot/
 │   └── include/      # Optional header files or libraries
 │── docs/             # Documentation, user guides, screenshots
 │── README.md         # This project overview
+```
+---
+
+## Setup Instructions
+
+1. Clone this repository:  
+git clone https://github.com/Hridyesh-07/MediBot
+2. Open Arduino IDE and install these libraries if not present:  
+- Keypad  
+- Servo  
+- LiquidCrystal_I2C  
+- SoftwareSerial  
+3. Upload `arduino_secondary.ino` (in `software/src/`) to Arduino controlling servos/keypad.  
+4. Upload `arduino_primary.ino` (in `software/src/`) to Arduino controlling LCD and pulse sensor.  
+5. Connect hardware according to the wiring schematic in `hardware/` folder.  
+6. Power the Arduinos and test the system.
+
+---
+
+## Usage
+
+- Use keypad on Arduino 2 to select a medicine slot (1-8) and set reminder time (HHMMSS).  
+- Press `#` to confirm the timing, or `*` to reset the system.  
+- At the programmed time, the buzzer sounds, the servo corresponding to the selected medicine slot opens it, and the LCD on Arduino 1 displays status and pulse information.
+
+---
+
+## Contribution
+
+Contributions, suggestions, and bug reports are welcome. Fork the project and submit pull requests with improvements or fixes.
+
+---
+
+## License
+
+Licensed under the MIT License. See the LICENSE file for details.
+
+---
+
+## Contact
+
+For questions or support, open an issue or contact [hridyeshb8@gmail.com,sujalpanchal997@gmail.com].
