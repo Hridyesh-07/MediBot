@@ -29,3 +29,46 @@ unsigned long setTime[NUM_SERVOS] = {0};
 unsigned long startTime[NUM_SERVOS] = {0};
 bool timeSet[NUM_SERVOS] = {false};
 bool servoRun[NUM_SERVOS] = {false};
+
+int currentServo = -1;
+bool pulseMode = false;
+
+void setup() {
+  Serial.begin(9600);
+  mySerial.begin(9600);
+
+  for (int i=0; i<NUM_SERVOS; i++) {
+    servos[i].attach(servoPins[i]);
+    servos[i].write(0);
+  }
+
+  pinMode(BUZZER_PIN, OUTPUT);
+  digitalWrite(BUZZER_PIN, LOW);
+
+  sendMsg("RESET");
+  sendMsg("Select: 1-8 Servo, A Pulse");
+}
+void loop() {
+  char key = keypad.getKey();
+
+  if (key) {
+    if (key == '*') { resetSystem(); }
+
+    else if ((key >= '1' && key <= '8') && currentServo == -1 && !pulseMode) {
+      currentServo = key - '1';
+      inputTime = "";
+      sendMsg("SERVO " + String(currentServo+1) + " SELECT");
+      sendMsg("Enter HHMMSS then #");
+    }
+
+    else if (key == 'A' && currentServo == -1 && !pulseMode) {
+      pulseMode = true;
+      sendMsg("PULSE MODE ON");
+    }
+
+    else if (key >= '0' && key <= '9' && currentServo != -1 && !timeSet[currentServo]) {
+      if (inputTime.length() < 6) {
+        inputTime += key;
+        sendMsg("Typing: " + inputTime);
+      }
+    }
